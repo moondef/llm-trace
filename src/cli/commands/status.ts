@@ -1,7 +1,11 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-export function getSessionStatus(projectDir: string) {
+export type SessionStatus =
+  | { active: false }
+  | { active: true; traceCount: number; errorCount: number; serverPort?: number };
+
+export function getSessionStatus(projectDir: string): SessionStatus {
   const logDir = join(projectDir, ".trace-ai-logs");
   if (!existsSync(logDir)) return { active: false };
 

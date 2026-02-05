@@ -23,7 +23,8 @@ describe("startSession", () => {
   it("reports already active", async () => {
     mkdirSync(join(testDir, ".trace-ai-logs"));
     const r = await startSession(testDir, { skipServer: true });
-    assert.equal(r.alreadyActive, true);
+    assert.equal(r.created, false);
+    assert.equal(r.reason, "already_active");
   });
 
   it("adds to .gitignore", async () => {

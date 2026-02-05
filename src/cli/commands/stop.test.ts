@@ -23,6 +23,7 @@ describe("stopSession", () => {
 
   it("reports no session", async () => {
     const r = await stopSession(testDir);
-    assert.equal(r.noSession, true);
+    assert.equal(r.stopped, false);
+    assert.equal(r.reason, "no_session");
   });
 });
