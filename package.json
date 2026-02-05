@@ -2,6 +2,26 @@
   "name": "trace-ai",
   "version": "0.1.0",
   "description": "Structured execution traces for LLM debugging",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moondef/trace-ai"
+  },
+  "keywords": [
+    "tracing",
+    "debugging",
+    "llm",
+    "ai-agent",
+    "execution-trace",
+    "observability",
+    "ndjson",
+    "spans",
+    "checkpoints",
+    "runtime-debugging"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
