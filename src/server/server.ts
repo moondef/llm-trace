@@ -23,7 +23,7 @@ export function createTraceServer(logDir: string) {
               for (const line of body.trim().split('\n')) {
                 try {
                   const event = JSON.parse(line)
-                  if (event.traceId && existsSync(logDir))
+                  if (event.traceId && existsSync(logDir) && /^[\w-]+$/.test(event.traceId))
                     appendFileSync(join(logDir, `${event.traceId}.ndjson`), line + '\n')
                 } catch {}
               }

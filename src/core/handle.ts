@@ -1,10 +1,7 @@
-// src/core/handle.ts
 import type { TraceHandle, TracerDeps } from '../types.ts'
+import { serializeError } from '../utils/errors.ts'
 
-function serializeError(err: unknown): { message: string; stack?: string } {
-  if (err instanceof Error) return { message: err.message, stack: err.stack }
-  return { message: String(err) }
-}
+const MAX_CHECKPOINT_BYTES = 64 * 1024
 
 export function createHandle(deps: TracerDeps, traceId: string, parentId: string): TraceHandle {
   return {
@@ -20,14 +17,16 @@ export function createHandle(deps: TracerDeps, traceId: string, parentId: string
 
       try {
         const result = await fn(childHandle)
+        const endTime = deps.clock.now()
         deps.writer.writeEvent(traceId, {
-          type: 'span:end', id: spanId, duration: deps.clock.now() - startTime, status: 'ok', ts: deps.clock.now(),
+          type: 'span:end', id: spanId, duration: endTime - startTime, status: 'ok', ts: endTime,
         })
         return result
       } catch (error) {
+        const endTime = deps.clock.now()
         deps.writer.writeEvent(traceId, {
-          type: 'span:end', id: spanId, duration: deps.clock.now() - startTime, status: 'error',
-          error: serializeError(error), ts: deps.clock.now(),
+          type: 'span:end', id: spanId, duration: endTime - startTime, status: 'error',
+          error: serializeError(error), ts: endTime,
         })
         throw error
       }
@@ -36,7 +35,14 @@ export function createHandle(deps: TracerDeps, traceId: string, parentId: string
     checkpoint(name: string, data?: unknown): void {
       let serialized = data
       if (data !== undefined) {
-        try { JSON.stringify(data) } catch { serialized = { _serializationError: true } }
+        try {
+          const json = JSON.stringify(data)
+          if (json.length > MAX_CHECKPOINT_BYTES) {
+            serialized = { _truncated: true, _originalSize: json.length }
+          }
+        } catch {
+          serialized = { _serializationError: true }
+        }
       }
       deps.writer.writeEvent(traceId, {
         type: 'checkpoint', parent: parentId, name, data: serialized, ts: deps.clock.now(),

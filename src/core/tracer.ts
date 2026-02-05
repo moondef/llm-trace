@@ -1,11 +1,6 @@
-// src/core/tracer.ts
 import type { TracerDeps, TraceHandle } from '../types.ts'
 import { createHandle, createNoopHandle } from './handle.ts'
-
-function serializeError(err: unknown): { message: string; stack?: string } {
-  if (err instanceof Error) return { message: err.message, stack: err.stack }
-  return { message: String(err) }
-}
+import { serializeError } from '../utils/errors.ts'
 
 export function createTracer(deps: TracerDeps) {
   async function trace<T>(name: string, fn: (handle: TraceHandle) => Promise<T>): Promise<T> {
@@ -24,14 +19,16 @@ export function createTracer(deps: TracerDeps) {
 
     try {
       const result = await fn(handle)
+      const endTime = deps.clock.now()
       deps.writer.writeEvent(traceId, {
-        type: 'trace:end', id: traceId, duration: deps.clock.now() - startTime, status: 'ok', ts: deps.clock.now(),
+        type: 'trace:end', id: traceId, duration: endTime - startTime, status: 'ok', ts: endTime,
       })
       return result
     } catch (error) {
+      const endTime = deps.clock.now()
       deps.writer.writeEvent(traceId, {
-        type: 'trace:end', id: traceId, duration: deps.clock.now() - startTime, status: 'error',
-        error: serializeError(error), ts: deps.clock.now(),
+        type: 'trace:end', id: traceId, duration: endTime - startTime, status: 'error',
+        error: serializeError(error), ts: endTime,
       })
       throw error
     }
