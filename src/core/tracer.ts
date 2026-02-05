@@ -1,8 +1,8 @@
-import type { TraceHandle, TracerDeps } from "../types.ts";
+import type { TraceHandle, Tracer, TracerDeps } from "../types.ts";
 import { serializeError } from "../utils/errors.ts";
 import { createHandle, createNoopHandle } from "./handle.ts";
 
-export function createTracer(deps: TracerDeps) {
+export function createTracer(deps: TracerDeps): Tracer {
   async function trace<T>(name: string, fn: (handle: TraceHandle) => Promise<T>): Promise<T> {
     if (!deps.writer.isSessionActive()) {
       return fn(createNoopHandle());

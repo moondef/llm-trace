@@ -1,24 +1,14 @@
 import { existsSync, readdirSync, readFileSync, watch } from "node:fs";
 import { join } from "node:path";
-import type { SerializedError, TraceEvent, TraceSummary } from "../../types.ts";
+import { summarizeEvents } from "../../readers/summarize.ts";
+import type { TraceEvent, TraceSummary } from "../../types.ts";
 
 function summarizeFile(filePath: string): TraceSummary | null {
   try {
     const content = readFileSync(filePath, "utf-8").trim();
     if (!content) return null;
     const events: TraceEvent[] = content.split("\n").map((l) => JSON.parse(l));
-    const start = events.find((e) => e.type === "trace:start");
-    if (!start) return null;
-    const end = events.find((e) => e.type === "trace:end");
-    return {
-      id: start.id as string,
-      name: start.name as string,
-      status: end ? (end.status as "ok" | "error") : "in_progress",
-      duration: end ? (end.duration as number) : undefined,
-      spans: events.filter((e) => e.type === "span:start").length,
-      ts: start.ts,
-      error: end?.error ? (end.error as SerializedError).message : undefined,
-    };
+    return summarizeEvents(events);
   } catch {
     return null;
   }

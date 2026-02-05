@@ -68,3 +68,19 @@ export interface ListOptions {
   name?: string;
   last?: number;
 }
+
+// --- Factory return types ---
+
+export interface Tracer {
+  trace<T>(name: string, fn: (handle: TraceHandle) => Promise<T>): Promise<T>;
+}
+
+export interface TraceReader {
+  listTraces(options?: ListOptions): Promise<TraceSummary[]>;
+  readTrace(id: string): Promise<TraceTreeNode>;
+}
+
+export interface TraceServer {
+  start(port: number): Promise<number>;
+  stop(): Promise<void>;
+}

@@ -4,11 +4,11 @@ import { createCryptoIdGenerator } from "./utils/id.ts";
 import { createHttpWriter } from "./writers/http-writer.ts";
 
 export { createTracer } from "./core/tracer.ts";
-export type { Clock, IdGenerator, TraceEvent, TraceHandle, TracerDeps, Writer } from "./types.ts";
+export type { Clock, IdGenerator, TraceEvent, TraceHandle, Tracer, TracerDeps, Writer } from "./types.ts";
 
 const DEFAULT_PORT = 13579;
-const port = (typeof process !== "undefined" && process.env?.TRACE_AI_PORT) || DEFAULT_PORT;
-const serverUrl = `http://127.0.0.1:${port}`;
+const envPort = typeof process !== "undefined" ? parseInt(process.env?.TRACE_AI_PORT || "", 10) : NaN;
+const serverUrl = `http://127.0.0.1:${envPort || DEFAULT_PORT}`;
 
 const defaultTracer = createTracer({
   writer: createHttpWriter(serverUrl),

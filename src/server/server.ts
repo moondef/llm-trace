@@ -1,8 +1,9 @@
 import { appendFileSync, existsSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { join } from "node:path";
+import type { TraceServer } from "../types.ts";
 
-export function createTraceServer(logDir: string) {
+export function createTraceServer(logDir: string): TraceServer {
   let httpServer: Server | null = null;
 
   return {

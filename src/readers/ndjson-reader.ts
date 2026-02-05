@@ -1,36 +1,22 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ListOptions, SerializedError, TraceEvent, TraceSummary, TraceTreeNode } from "../types.ts";
+import type { ListOptions, TraceEvent, TraceReader } from "../types.ts";
+import { summarizeEvents } from "./summarize.ts";
 import { buildTree } from "./tree-builder.ts";
 
-export function createNdjsonReader(logDir: string) {
+export function createNdjsonReader(logDir: string): TraceReader {
   function parseFile(filePath: string): TraceEvent[] {
     const content = readFileSync(filePath, "utf-8").trim();
     if (!content) return [];
     return content.split("\n").map((line: string) => JSON.parse(line));
   }
 
-  function summarize(events: TraceEvent[]): TraceSummary | null {
-    const start = events.find((e) => e.type === "trace:start");
-    if (!start) return null;
-    const end = events.find((e) => e.type === "trace:end");
-    return {
-      id: start.id as string,
-      name: start.name as string,
-      status: end ? (end.status as "ok" | "error") : "in_progress",
-      duration: end ? (end.duration as number) : undefined,
-      spans: events.filter((e) => e.type === "span:start").length,
-      ts: start.ts,
-      error: end?.error ? (end.error as SerializedError).message : undefined,
-    };
-  }
-
   return {
-    async listTraces(options?: ListOptions): Promise<TraceSummary[]> {
+    async listTraces(options?: ListOptions) {
       const files = readdirSync(logDir).filter((f: string) => f.endsWith(".ndjson"));
-      let summaries: TraceSummary[] = [];
+      let summaries = [];
       for (const file of files) {
-        const s = summarize(parseFile(join(logDir, file)));
+        const s = summarizeEvents(parseFile(join(logDir, file)));
         if (s) summaries.push(s);
       }
       summaries.sort((a, b) => b.ts - a.ts);
@@ -43,7 +29,7 @@ export function createNdjsonReader(logDir: string) {
       return summaries;
     },
 
-    async readTrace(id: string): Promise<TraceTreeNode> {
+    async readTrace(id: string) {
       return buildTree(parseFile(join(logDir, `${id}.ndjson`)));
     },
   };
