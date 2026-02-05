@@ -39,5 +39,6 @@ export async function runTail(options: Record<string, string | boolean>) {
     }
   });
 
+  // Keep the process alive while the file watcher runs
   await new Promise(() => {});
 }

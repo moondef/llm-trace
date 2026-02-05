@@ -6,7 +6,8 @@ export function formatTraceList(traces: TraceSummary[], human: boolean): string 
   const header = "ID                       NAME             STATUS   DURATION  SPANS";
   const rows = traces.map((t) => {
     const dur = t.duration !== undefined ? `${t.duration}ms` : "—";
-    return `${t.id.padEnd(24)} ${t.name.padEnd(16)} ${(t.status === "error" ? "ERROR" : t.status).padEnd(8)} ${dur.padEnd(9)} ${t.spans}`;
+    const statusLabel = t.status === "error" ? "ERROR" : t.status;
+    return [t.id.padEnd(24), t.name.padEnd(16), statusLabel.padEnd(8), dur.padEnd(9), t.spans].join(" ");
   });
   return [header, "-".repeat(header.length), ...rows].join("\n");
 }

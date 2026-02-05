@@ -16,10 +16,10 @@ export function getSessionStatus(projectDir: string): SessionStatus {
   }
 
   let serverPort: number | undefined;
-  const sf = join(logDir, ".server");
-  if (existsSync(sf)) {
+  const serverFile = join(logDir, ".server");
+  if (existsSync(serverFile)) {
     try {
-      serverPort = JSON.parse(readFileSync(sf, "utf-8")).port;
+      serverPort = JSON.parse(readFileSync(serverFile, "utf-8")).port;
     } catch {}
   }
 
@@ -27,11 +27,11 @@ export function getSessionStatus(projectDir: string): SessionStatus {
 }
 
 export async function runStatus() {
-  const s = getSessionStatus(process.cwd());
-  if (!s.active) {
+  const status = getSessionStatus(process.cwd());
+  if (!status.active) {
     console.log("No active session.");
     return;
   }
-  console.log(`Session active.\nTraces: ${s.traceCount} (${s.errorCount} errors)`);
-  if (s.serverPort) console.log(`Browser server: port ${s.serverPort}`);
+  console.log(`Session active.\nTraces: ${status.traceCount} (${status.errorCount} errors)`);
+  if (status.serverPort) console.log(`Browser server: port ${status.serverPort}`);
 }

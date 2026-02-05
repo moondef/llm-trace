@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import type { TraceEvent } from "../types.ts";
 import { buildTree } from "./tree-builder.ts";
 
 describe("buildTree", () => {
@@ -8,7 +9,7 @@ describe("buildTree", () => {
       { type: "trace:start", id: "t-1", name: "test", ts: 1000 },
       { type: "checkpoint", parent: "t-1", name: "data", data: { x: 1 }, ts: 1010 },
       { type: "trace:end", id: "t-1", duration: 50, status: "ok", ts: 1050 },
-    ];
+    ] as TraceEvent[];
     const tree = buildTree(events);
     assert.equal(tree.name, "test");
     assert.equal(tree.status, "ok");
@@ -25,13 +26,13 @@ describe("buildTree", () => {
       { type: "span:end", id: "s-2", duration: 10, status: "ok", ts: 1030 },
       { type: "span:end", id: "s-1", duration: 25, status: "ok", ts: 1035 },
       { type: "trace:end", id: "t-1", duration: 40, status: "ok", ts: 1040 },
-    ];
+    ] as TraceEvent[];
     const tree = buildTree(events);
     assert.equal(tree.children[0].children[0].children[0].name, "deep");
   });
 
   it("handles in-progress trace", () => {
-    const tree = buildTree([{ type: "trace:start", id: "t-1", name: "test", ts: 1000 }]);
+    const tree = buildTree([{ type: "trace:start", id: "t-1", name: "test", ts: 1000 }] as TraceEvent[]);
     assert.equal(tree.status, "in_progress");
   });
 });

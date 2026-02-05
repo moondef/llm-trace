@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createNdjsonReader } from "../../readers/ndjson-reader.ts";
 import { formatTraceList } from "../formatter.ts";
 
-export async function listTraces(logDir: string, options: Record<string, string | boolean>) {
+export async function getFormattedList(logDir: string, options: Record<string, string | boolean>) {
   const reader = createNdjsonReader(logDir);
   const traces = await reader.listTraces({
     errors: options.errors === true,
@@ -19,5 +19,5 @@ export async function runList(options: Record<string, string | boolean>) {
     console.log("No active session.");
     return;
   }
-  console.log(await listTraces(logDir, options));
+  console.log(await getFormattedList(logDir, options));
 }

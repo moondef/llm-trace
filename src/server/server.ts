@@ -6,8 +6,8 @@ import type { TraceServer } from "../types.ts";
 function collectBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve) => {
     let body = "";
-    req.on("data", (c) => {
-      body += c;
+    req.on("data", (chunk) => {
+      body += chunk;
     });
     req.on("end", () => resolve(body));
   });

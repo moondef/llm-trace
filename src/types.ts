@@ -1,15 +1,52 @@
 // --- Events ---
 
-export interface TraceEvent {
-  type: string;
-  ts: number;
-  [key: string]: unknown;
-}
-
 export interface SerializedError {
   message: string;
   stack?: string;
 }
+
+export interface TraceStartEvent {
+  type: "trace:start";
+  id: string;
+  name: string;
+  ts: number;
+}
+
+export interface TraceEndEvent {
+  type: "trace:end";
+  id: string;
+  status: "ok" | "error";
+  duration: number;
+  ts: number;
+  error?: SerializedError;
+}
+
+export interface SpanStartEvent {
+  type: "span:start";
+  id: string;
+  parent: string;
+  name: string;
+  ts: number;
+}
+
+export interface SpanEndEvent {
+  type: "span:end";
+  id: string;
+  status: "ok" | "error";
+  duration: number;
+  ts: number;
+  error?: SerializedError;
+}
+
+export interface CheckpointEvent {
+  type: "checkpoint";
+  parent: string;
+  name: string;
+  ts: number;
+  data?: unknown;
+}
+
+export type TraceEvent = TraceStartEvent | TraceEndEvent | SpanStartEvent | SpanEndEvent | CheckpointEvent;
 
 // --- Dependencies (interfaces for DI) ---
 

@@ -3,9 +3,9 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, it } from "node:test";
-import { listTraces } from "./list.ts";
+import { getFormattedList } from "./list.ts";
 
-describe("listTraces", () => {
+describe("getFormattedList", () => {
   let logDir: string;
   let testDir: string;
 
@@ -26,7 +26,7 @@ describe("listTraces", () => {
         JSON.stringify({ type: "trace:end", id: "api-1", duration: 50, status: "ok", ts: 1050 }),
       ].join("\n")}\n`,
     );
-    const output = await listTraces(logDir, {});
+    const output = await getFormattedList(logDir, {});
     assert.equal(JSON.parse(output)[0].name, "api");
   });
 });

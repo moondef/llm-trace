@@ -3,23 +3,19 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export type StartResult =
-  | { created: false; reason: "already_active" }
-  | { created: true; port?: number };
+export type StartResult = { created: false; reason: "already_active" } | { created: true; port?: number };
 
-export async function startSession(
-  projectDir: string,
-  options: { skipServer?: boolean } = {},
-): Promise<StartResult> {
+export async function startSession(projectDir: string, options: { skipServer?: boolean } = {}): Promise<StartResult> {
   const logDir = join(projectDir, ".trace-ai-logs");
   if (existsSync(logDir)) return { created: false, reason: "already_active" };
   mkdirSync(logDir, { recursive: true });
 
-  const gi = join(projectDir, ".gitignore");
-  if (existsSync(gi)) {
-    if (!readFileSync(gi, "utf-8").includes(".trace-ai-logs/")) appendFileSync(gi, "\n.trace-ai-logs/\n");
+  const gitignorePath = join(projectDir, ".gitignore");
+  if (existsSync(gitignorePath)) {
+    if (!readFileSync(gitignorePath, "utf-8").includes(".trace-ai-logs/"))
+      appendFileSync(gitignorePath, "\n.trace-ai-logs/\n");
   } else {
-    writeFileSync(gi, ".trace-ai-logs/\n");
+    writeFileSync(gitignorePath, ".trace-ai-logs/\n");
   }
 
   if (!options.skipServer) {
@@ -38,7 +34,7 @@ export async function startSession(
 }
 
 export async function runStart() {
-  const r = await startSession(process.cwd());
-  if (!r.created) console.log("Session already active.");
-  else console.log(`Session started.${r.port ? ` Browser server on port ${r.port}.` : ""}`);
+  const result = await startSession(process.cwd());
+  if (!result.created) console.log("Session already active.");
+  else console.log(`Session started.${result.port ? ` Browser server on port ${result.port}.` : ""}`);
 }

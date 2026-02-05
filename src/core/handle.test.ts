@@ -3,8 +3,8 @@ import { describe, it } from "node:test";
 import type { Clock, IdGenerator, TraceEvent, Writer } from "../types.ts";
 import { createHandle, createNoopHandle } from "./handle.ts";
 
-function createMemoryWriter(): Writer & { events: Map<string, TraceEvent[]> } {
-  const events = new Map<string, TraceEvent[]>();
+function createMemoryWriter(): Writer & { events: Map<string, any[]> } {
+  const events = new Map<string, any[]>();
   return {
     events,
     isSessionActive: () => true,

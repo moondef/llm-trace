@@ -6,7 +6,8 @@ export function createHttpWriter(serverUrl: string): Writer & { flush(): Promise
   let buffer: string[] = [];
   let timer: ReturnType<typeof setTimeout> | null = null;
   let warned = false;
-  let inflight: Promise<void> = Promise.resolve();
+  // Chains flush operations so concurrent flushes don't interleave
+  let flushChain: Promise<void> = Promise.resolve();
 
   async function sendBuffer(): Promise<void> {
     if (buffer.length === 0) return;
@@ -27,13 +28,15 @@ export function createHttpWriter(serverUrl: string): Writer & { flush(): Promise
   }
 
   function flush(): Promise<void> {
-    inflight = inflight.then(() => sendBuffer());
-    return inflight;
+    flushChain = flushChain.then(() => sendBuffer());
+    return flushChain;
   }
 
   return {
+    // Always returns true — the SDK optimistically sends events.
+    // If the server isn't running, sendBuffer catches and warns once.
     isSessionActive(): boolean {
-      return true; // Server handles the truth — SDK always tries
+      return true;
     },
 
     writeEvent(traceId: string, event: TraceEvent): void {

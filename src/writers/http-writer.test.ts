@@ -40,8 +40,8 @@ describe("createHttpWriter", () => {
 
   it("batches and flushes events", async () => {
     const writer = createHttpWriter(`http://127.0.0.1:${port}`);
-    writer.writeEvent("t-1", { type: "trace:start", id: "t-1", ts: 1000 });
-    writer.writeEvent("t-1", { type: "trace:end", id: "t-1", ts: 1050 });
+    writer.writeEvent("t-1", { type: "trace:start", id: "t-1", ts: 1000, name: "test" });
+    writer.writeEvent("t-1", { type: "trace:end", id: "t-1", ts: 1050, status: "ok", duration: 50 });
     await writer.flush();
     assert.equal(received.length, 1);
     assert.equal(received[0].trim().split("\n").length, 2);
@@ -49,8 +49,8 @@ describe("createHttpWriter", () => {
 
   it("auto-flushes on trace:end", async () => {
     const writer = createHttpWriter(`http://127.0.0.1:${port}`);
-    writer.writeEvent("t-1", { type: "trace:start", id: "t-1", ts: 1000 });
-    writer.writeEvent("t-1", { type: "trace:end", id: "t-1", ts: 1050 });
+    writer.writeEvent("t-1", { type: "trace:start", id: "t-1", ts: 1000, name: "test" });
+    writer.writeEvent("t-1", { type: "trace:end", id: "t-1", ts: 1050, status: "ok", duration: 50 });
     await new Promise((r) => setTimeout(r, 200));
     assert.ok(received.length >= 1);
   });
@@ -60,9 +60,9 @@ describe("createHttpWriter", () => {
     const warnings: string[] = [];
     const origWarn = console.warn;
     console.warn = (msg: string) => warnings.push(msg);
-    writer.writeEvent("t-1", { type: "trace:end", id: "t-1", ts: 1000 });
+    writer.writeEvent("t-1", { type: "trace:end", id: "t-1", ts: 1000, status: "ok", duration: 0 });
     await writer.flush();
-    writer.writeEvent("t-2", { type: "trace:end", id: "t-2", ts: 2000 });
+    writer.writeEvent("t-2", { type: "trace:end", id: "t-2", ts: 2000, status: "ok", duration: 0 });
     await writer.flush();
     console.warn = origWarn;
     assert.equal(warnings.length, 1); // warned only once

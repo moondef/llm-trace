@@ -3,8 +3,8 @@ import { describe, it } from "node:test";
 import { createTracer } from "./core/tracer.ts";
 import type { IdGenerator, TraceEvent, Writer } from "./types.ts";
 
-function createMemoryWriter(): Writer & { allEvents(): TraceEvent[] } {
-  const events = new Map<string, TraceEvent[]>();
+function createMemoryWriter(): Writer & { allEvents(): any[] } {
+  const events = new Map<string, any[]>();
   return {
     allEvents: () => [...events.values()].flat(),
     isSessionActive: () => true,
