@@ -18,7 +18,7 @@ export async function startSession(projectDir: string, options: { skipServer?: b
 
   if (!options.skipServer) {
     const port = parseInt(process.env.TRACE_AI_PORT || '', 10) || 13579
-    const script = join(fileURLToPath(import.meta.url), '..', '..', '..', 'server', 'standalone.js')
+    const script = join(fileURLToPath(import.meta.url), '..', 'standalone.js')
     const child = spawn(process.execPath, [script], {
       detached: true, stdio: 'ignore',
       env: { ...process.env, TRACE_AI_PORT: String(port), TRACE_AI_DIR: logDir },
