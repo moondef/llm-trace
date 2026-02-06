@@ -1,6 +1,6 @@
 ---
 name: debugging-with-llm-trace
-description: Use when debugging runtime issues, unexpected behavior, or errors in code that has llm-trace installed — before resorting to print statements or guessing at fixes
+description: Use when debugging runtime issues, unexpected behavior, errors, or performance problems. Covers instrumenting code with trace/span/checkpoint, reading structured execution traces, diagnosing root cause from runtime data, iterative narrowing, and verifying fixes. Use before resorting to print statements or guessing at fixes. Requires llm-trace to be installed in the project.
 ---
 
 # Debugging with llm-trace
@@ -9,31 +9,23 @@ description: Use when debugging runtime issues, unexpected behavior, or errors i
 
 You can see runtime behavior directly instead of asking the user to paste errors. Instrument the code, run it, read the traces, find root cause.
 
-**Core principle:** Instrument first, read traces, then fix. Never guess at runtime behavior.
+## Guardrails
 
-## When to Use
+```
+NEVER guess at runtime behavior. Instrument first, read traces, then fix.
+NEVER propose fixes before reading trace data.
+NEVER leave instrumentation in the code after debugging.
+```
 
-- Bug reports where you can't see what happened at runtime
-- Unexpected behavior that isn't obvious from reading code
-- Errors deep in async call chains
-- Performance issues where you need to see what's slow
-- Any time you'd normally ask "can you paste the error?"
+## Prerequisites (required)
 
-**Don't use when:**
-- Bug is obvious from reading the code (typo, wrong variable name)
-- Issue is purely at the type level (compile error, not runtime)
-
-## Prerequisites
-
-Confirm llm-trace is installed:
+Verify llm-trace is available before proceeding:
 
 ```bash
-# Check if installed
-npm ls llm-trace
-
-# Install if needed
-npm install llm-trace
+npm ls llm-trace || npm install llm-trace
 ```
+
+If this fails, stop and resolve the installation before continuing.
 
 ## The Process
 
@@ -51,24 +43,23 @@ npx llm-trace status
 
 ### 2. Instrument the suspected code
 
-Add `trace()` around the operation that fails. Add `span()` around each step. Add `checkpoint()` to capture state at key decision points.
+Add `trace()` around the operation that fails. Add `span()` around each step. Add `checkpoint()` to capture state at key points.
 
 ```typescript
 import { trace } from "llm-trace";
 
-// Wrap the failing operation
 const result = await trace("debug-checkout", async (handle) => {
 
   const cart = await handle.span("load-cart", async (h) => {
     const data = await db.getCart(userId);
-    h.checkpoint("cart-data", data);         // What does the cart look like?
+    h.checkpoint("cart-data", data);
     return data;
   });
 
   const total = await handle.span("calculate-total", async (h) => {
-    h.checkpoint("input", { cart, discountCode });  // What goes in?
+    h.checkpoint("input", { cart, discountCode });
     const result = calculateTotal(cart, discountCode);
-    h.checkpoint("output", result);                  // What comes out?
+    h.checkpoint("output", result);
     return result;
   });
 
@@ -81,74 +72,96 @@ const result = await trace("debug-checkout", async (handle) => {
 });
 ```
 
-**What to instrument:**
-- The boundary of the failing operation → `trace()`
-- Each logical step within it → `span()`
-- Inputs and outputs at decision points → `checkpoint()`
-- Data right before the error occurs → `checkpoint()`
-
-**Instrumentation rules:**
+**Rules:**
 - Checkpoint BEFORE and AFTER transforms — see what goes in and what comes out
 - Name checkpoints by what the data IS ("cart-data", "api-response"), not what you're doing ("step-1")
-- Errors are captured automatically — if a span throws, llm-trace records the error and stack trace
+- Errors are captured automatically — if a span throws, llm-trace records the error and stack
 
 ### 3. Run the code
 
-Ask the user to reproduce the issue, or run it yourself if possible:
+Trigger the bug — run whatever reproduces the issue. Ask the user if you're not sure how.
 
-```bash
-# Run the code that triggers the bug
-npm test
-# or
-node scripts/reproduce.js
-```
+Do NOT modify any code during this step. Only observe.
 
 ### 4. Read the traces
 
 ```bash
-# List all traces
-npx llm-trace list
-
-# Or filter for just errors
-npx llm-trace list --errors
-
-# Show a specific trace as a tree
-npx llm-trace show <trace-id>
+npx llm-trace list              # all traces
+npx llm-trace list --errors     # just failures
+npx llm-trace show <trace-id>   # full trace tree
 ```
 
-The JSON output gives you:
-- **Hierarchy**: trace → spans → checkpoints, showing execution flow
-- **Timing**: duration of each span in milliseconds
-- **Status**: which span errored and the error message + stack
-- **Data**: checkpoint snapshots showing actual runtime values
+#### `list` output
+
+```json
+[{
+  "id": "debug-checkout-a1b2c3",
+  "name": "debug-checkout",
+  "status": "error",
+  "duration": 523,
+  "spans": 3,
+  "ts": 1738800000000,
+  "error": "Payment failed: card declined"
+}]
+```
+
+#### `show` output
+
+Nested tree of spans and checkpoints:
+
+```json
+{
+  "type": "trace", "name": "debug-checkout", "status": "error", "duration": 523,
+  "children": [
+    { "type": "span", "name": "load-cart", "status": "ok", "duration": 45,
+      "children": [
+        { "type": "checkpoint", "name": "cart-data",
+          "data": { "items": [{ "sku": "A1", "qty": 2, "price": 29.99 }] } }
+      ] },
+    { "type": "span", "name": "calculate-total", "status": "ok", "duration": 3,
+      "children": [
+        { "type": "checkpoint", "name": "input",
+          "data": { "discountCode": "SAVE10" } },
+        { "type": "checkpoint", "name": "output",
+          "data": { "subtotal": 59.98, "discount": -6.0, "total": -53.98 } }
+      ] },
+    { "type": "span", "name": "charge-payment", "status": "error", "duration": 475,
+      "error": { "message": "Payment failed: card declined" },
+      "children": [
+        { "type": "checkpoint", "name": "charge-request",
+          "data": { "total": -53.98 } }
+      ] }
+  ]
+}
+```
+
+This trace tells the story: `calculate-total` produced a negative total (`-53.98` — discount subtracted wrong), so `charge-payment` failed. Root cause is in `calculateTotal`, not the payment code.
 
 ### 5. Diagnose from the data
 
 Read the trace. The root cause is in the data:
 - Which span errored? Read the error message and stack.
-- What were the checkpoint values right before the error? Compare expected vs actual.
+- What checkpoint values came right before the error? Compare expected vs actual.
 - Did a value become `null` or `undefined` unexpectedly? Trace it back through checkpoints.
 - Is a span taking too long? Compare durations.
 
+Do NOT propose fixes until you understand the root cause from the trace data.
+
 ### 6. Fix and verify
 
-Fix the root cause. Run again. Check the new trace confirms the fix:
+Fix the root cause. Reproduce the scenario again. Confirm the new trace is clean:
 
 ```bash
-# Re-run the code
-npm test
-
-# Verify the trace is now clean
 npx llm-trace list --last 1
 npx llm-trace show <new-trace-id>
 ```
 
 ### 7. Clean up
 
-Remove instrumentation and stop the session:
+This step is mandatory:
 
-1. Remove the `trace()`, `span()`, and `checkpoint()` calls you added
-2. Remove the `import { trace } from "llm-trace"` if no longer needed
+1. Remove all `trace()`, `span()`, and `checkpoint()` calls you added
+2. Remove `import { trace } from "llm-trace"` if no longer needed
 3. Stop the session:
 
 ```bash
@@ -157,41 +170,42 @@ npx llm-trace stop
 
 ## Narrowing Down
 
-If the first trace is too broad, narrow the instrumentation:
+If the first trace is too broad:
 
-1. Find which span errors or has unexpected checkpoint values
+1. Find which span has unexpected checkpoint values
 2. Replace that span's body with more granular spans and checkpoints
 3. Run again
-4. Repeat until you see the exact line/value causing the issue
+4. Repeat until you see the exact value causing the issue
 
-This is binary search for bugs — each iteration halves the search space.
+Each iteration halves the search space.
 
 ## Quick Reference
 
-| Primitive | When to use | What it captures |
-|-----------|-------------|-----------------|
-| `trace(name, fn)` | Whole operation boundary | Start/end, duration, error |
-| `handle.span(name, fn)` | Each step within a trace | Start/end, duration, error |
-| `handle.checkpoint(name, data?)` | Key decision points | Point-in-time data snapshot |
+| Primitive | Purpose |
+|-----------|---------|
+| `trace(name, fn)` | Wrap a complete operation |
+| `handle.span(name, fn)` | Time a step within a trace |
+| `handle.checkpoint(name, data?)` | Snapshot a value |
 
-| CLI Command | Purpose |
-|-------------|---------|
+| CLI | Purpose |
+|-----|---------|
 | `llm-trace start` | Begin session |
-| `llm-trace list --errors` | Find failing traces |
-| `llm-trace show <id>` | Read full trace tree |
-| `llm-trace tail` | Watch for new traces live |
+| `llm-trace list` | List all traces |
+| `llm-trace list --errors` | List failures only |
+| `llm-trace show <id>` | Full trace tree |
+| `llm-trace tail` | Watch live |
 | `llm-trace stop` | End session, delete traces |
 
 ## Common Mistakes
 
-**Instrumenting too much at once**
+**Guessing before reading traces.**
+The trace data shows you the root cause. Read it before proposing fixes.
+
+**Instrumenting too much at once.**
 Start with one trace around the failing operation. Add granularity only where the trace shows the problem is.
 
-**Forgetting to checkpoint before transforms**
+**Forgetting to checkpoint before transforms.**
 If you only checkpoint the output, you can't tell whether the input was bad or the transform was bad. Checkpoint both.
 
-**Leaving instrumentation in production code**
+**Leaving instrumentation in the code.**
 Always remove llm-trace calls after debugging. They're for debugging sessions, not permanent logging.
-
-**Not reading the actual trace data**
-Don't just look at the error message. Read the checkpoint values. The root cause is usually in the data, not the error string.

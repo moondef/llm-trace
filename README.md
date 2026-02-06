@@ -8,26 +8,47 @@ LLMs can read your code but they can't run it in their head. When something brea
 
 llm-trace fixes this. It gives LLMs a way to instrument your code with structured traces, see actual runtime values, and figure out what went wrong without the back-and-forth.
 
-## Try It
+## Install
 
+Install the [debugging skill](skills/debugging-with-llm-trace/SKILL.md) so your LLM tool knows how to use llm-trace. The skill will ask to `npm install llm-trace` into your project — it's the SDK that provides the `trace()`, `span()`, and `checkpoint()` calls for code instrumentation.
+
+**Claude Code:**
 ```bash
-npm install llm-trace
+/plugin install moondef/llm-trace
 ```
 
-Add the [debugging skill](skills/debugging-with-llm-trace/SKILL.md) to Claude Code (or any LLM coding tool) and ask it to debug something. That's it — the skill teaches it the workflow.
+**Codex:**
+```
+$skill-installer install https://github.com/moondef/llm-trace/tree/main/skills/debugging-with-llm-trace
+```
 
-### What happens next
+**Any tool** (via npx):
+```bash
+npx skills add moondef/llm-trace
+```
 
-You tell the LLM "this endpoint returns 500 sometimes" and it:
+**Or clone and copy manually:**
+```bash
+git clone https://github.com/moondef/llm-trace.git
+cp -r llm-trace/skills/debugging-with-llm-trace ~/.claude/skills/
+```
 
-1. Runs `npx llm-trace start`
-2. Wraps the endpoint in `trace()` with `span()` and `checkpoint()` calls
-3. Triggers the bug
-4. Reads the trace — sees actual values at each step, which span failed, the error
+## Usage
+
+Just ask your LLM to debug something. The skill handles the rest.
+
+You say "this endpoint returns 500 sometimes" and it:
+
+1. Starts a tracing session (`llm-trace start`)
+2. Instruments the suspect code with `trace()`, `span()`, and `checkpoint()`
+3. Runs the code to trigger the bug
+4. Reads the trace — actual values at each step, which span failed, the error
 5. Fixes the root cause based on what it saw
-6. Removes instrumentation, runs `npx llm-trace stop`
+6. Cleans up instrumentation and stops the session
 
-## Three Primitives
+## What It Captures
+
+Three primitives, all the LLM needs:
 
 ```typescript
 import { trace } from "llm-trace";
@@ -50,7 +71,7 @@ await trace("checkout", async (handle) => {
 
 **`handle.span(name, fn)`** — a timed step within a trace. Nests to any depth.
 
-**`handle.checkpoint(name, data?)`** — snapshots a value (truncated at 64KB).
+**`handle.checkpoint(name, data?)`** — snapshots a value at a point in time (truncated at 64KB).
 
 Errors are captured automatically — if anything throws, the trace records the error and stack.
 
@@ -67,9 +88,9 @@ llm-trace stop              # end session, delete traces
 
 Output is JSON by default (for LLM consumption). Add `--human` for readable output.
 
-## How It Fits Together
+## How It Works
 
-The LLM writes `trace()` / `span()` / `checkpoint()` calls into your code. When the code runs, events stream over HTTP to a local server that writes `.ndjson` files. The LLM reads those files via the CLI. After debugging, everything is cleaned up — traces are ephemeral.
+The LLM writes `trace()` / `span()` / `checkpoint()` calls into your code. When the code runs, events stream over HTTP to a local server that writes `.ndjson` files. The LLM reads those files via the CLI. After debugging, everything gets cleaned up — traces are ephemeral.
 
 No dependencies. No config. Nothing persisted after `stop`.
 
@@ -78,3 +99,7 @@ No dependencies. No config. Nothing persisted after `stop`.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LLM_TRACE_PORT` | `13579` | HTTP server port |
+
+## Contributing
+
+Issues and PRs welcome at [github.com/moondef/llm-trace](https://github.com/moondef/llm-trace).
