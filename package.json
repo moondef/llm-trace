@@ -1,6 +1,6 @@
 {
   "name": "llm-trace",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "description": "Structured execution traces for LLM debugging",
   "license": "MIT",
