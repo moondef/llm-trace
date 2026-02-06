@@ -19,12 +19,12 @@ export async function startSession(projectDir: string, options: { skipServer?: b
   }
 
   if (!options.skipServer) {
-    const port = parseInt(process.env.TRACE_AI_PORT || "", 10) || 13579;
+    const port = parseInt(process.env.LLM_TRACE_PORT || "", 10) || 13579;
     const script = join(fileURLToPath(import.meta.url), "..", "standalone.js");
     const child = spawn(process.execPath, [script], {
       detached: true,
       stdio: "ignore",
-      env: { ...process.env, TRACE_AI_PORT: String(port), TRACE_AI_DIR: logDir },
+      env: { ...process.env, LLM_TRACE_PORT: String(port), TRACE_AI_DIR: logDir },
     });
     child.unref();
     writeFileSync(join(logDir, ".server"), JSON.stringify({ pid: child.pid, port }));

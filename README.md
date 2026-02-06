@@ -73,4 +73,4 @@ No dependencies. No config. Nothing persisted after `stop`.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TRACE_AI_PORT` | `13579` | HTTP server port |
+| `LLM_TRACE_PORT` | `13579` | HTTP server port |
