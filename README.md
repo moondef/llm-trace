@@ -1,71 +1,73 @@
 # llm-trace
 
-When an LLM debugs your code, it can't see what happens at runtime. It reads your source, guesses what went wrong, and asks you to paste error messages. You end up as a middleman — running code, copying output, adding print statements.
+LLMs can read your code but they can't run it in their head. When something breaks, they end up asking you to paste errors and add `console.log` statements one at a time while they guess at what's going on.
 
-llm-trace lets LLMs see runtime behavior directly. They instrument your code with traces, run it, inspect what happened, and fix the bug — without asking you to copy-paste anything.
+llm-trace fixes this. It gives LLMs a way to instrument your code with structured traces, see actual runtime values, and figure out what went wrong without the back-and-forth.
 
-## Setup
+## Try It
 
 ```bash
 npm install llm-trace
 ```
 
-Add the [debugging skill](skills/debugging-with-llm-trace/SKILL.md) to your LLM tool (Claude Code, Codex, etc.) so it knows how to use llm-trace.
+Add the [debugging skill](skills/debugging-with-llm-trace/SKILL.md) to Claude Code (or any LLM coding tool) and ask it to debug something. That's it — the skill teaches it the workflow.
 
-## How It Works
+### What happens next
 
-1. LLM runs `npx llm-trace start` to begin a debugging session
-2. LLM instruments your code with `trace()`, `span()`, and `checkpoint()` calls
-3. You run your code (or LLM runs it)
-4. LLM queries traces with `npx llm-trace list`, `show`, `tail`
-5. LLM reads structured runtime data, identifies root cause, fixes the bug
-6. LLM runs `npx llm-trace stop` to clean up
+You tell the LLM "this endpoint returns 500 sometimes" and it:
 
-Traces are ephemeral — they exist only during the debugging session and are deleted when it ends.
+1. Runs `npx llm-trace start`
+2. Wraps the endpoint in `trace()` with `span()` and `checkpoint()` calls
+3. Triggers the bug
+4. Reads the trace — sees actual values at each step, which span failed, the error
+5. Fixes the root cause based on what it saw
+6. Removes instrumentation, runs `npx llm-trace stop`
 
-## API
-
-### `trace(name, fn)` — wrap a complete operation
+## Three Primitives
 
 ```typescript
 import { trace } from "llm-trace";
 
-const result = await trace("handle-request", async (handle) => {
-  // handle.span() and handle.checkpoint() available here
-  return processRequest(req);
+await trace("checkout", async (handle) => {
+
+  // span — time a step, nest arbitrarily
+  await handle.span("load-cart", async (h) => {
+    const cart = await db.getCart(userId);
+
+    // checkpoint — snapshot runtime values
+    h.checkpoint("cart", cart);
+
+    return cart;
+  });
 });
 ```
 
-### `handle.span(name, fn)` — time a step within a trace
+**`trace(name, fn)`** — wraps a complete operation. Captures start, end, duration, errors.
 
-```typescript
-await handle.span("call-llm", async (h) => {
-  const response = await llm.chat(prompt);
-  h.checkpoint("response", response);
-  return response;
-});
-```
+**`handle.span(name, fn)`** — a timed step within a trace. Nests to any depth.
 
-### `handle.checkpoint(name, data?)` — snapshot state at a point in time
+**`handle.checkpoint(name, data?)`** — snapshots a value (truncated at 64KB).
 
-```typescript
-handle.checkpoint("parsed-input", { tokens: 142 });
-```
-
-Spans nest arbitrarily. Errors are captured automatically. Checkpoint data is truncated at 64KB.
+Errors are captured automatically — if anything throws, the trace records the error and stack.
 
 ## CLI
 
-| Command | Description |
-|---------|-------------|
-| `llm-trace start` | Begin session, start trace server |
-| `llm-trace stop` | End session, delete all traces |
-| `llm-trace status` | Check if a session is active |
-| `llm-trace list` | List traces (`--errors`, `--name <glob>`, `--last <n>`, `--human`) |
-| `llm-trace show <id>` | Show trace tree (`--human` for readable output) |
-| `llm-trace tail` | Stream new traces (`--errors`, `--name <glob>`) |
+```bash
+llm-trace start             # begin session
+llm-trace list              # all traces (JSON by default)
+llm-trace list --errors     # just failures
+llm-trace show <id>         # full trace tree
+llm-trace tail              # watch live
+llm-trace stop              # end session, delete traces
+```
 
-Default output is JSON (for LLM consumption). `--human` for readable output.
+Output is JSON by default (for LLM consumption). Add `--human` for readable output.
+
+## How It Fits Together
+
+The LLM writes `trace()` / `span()` / `checkpoint()` calls into your code. When the code runs, events stream over HTTP to a local server that writes `.ndjson` files. The LLM reads those files via the CLI. After debugging, everything is cleaned up — traces are ephemeral.
+
+No dependencies. No config. Nothing persisted after `stop`.
 
 ## Configuration
 
