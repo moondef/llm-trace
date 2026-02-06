@@ -1,5 +1,9 @@
 # llm-trace
 
+[![npm version](https://img.shields.io/npm/v/llm-trace.svg)](https://www.npmjs.com/package/llm-trace)
+[![CI](https://github.com/moondef/llm-trace/actions/workflows/ci.yml/badge.svg)](https://github.com/moondef/llm-trace/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 LLMs can read your code but they can't run it in their head. When something breaks, they end up asking you to paste errors and add `console.log` statements one at a time while they guess at what's going on.
 
 llm-trace fixes this. It gives LLMs a way to instrument your code with structured traces, see actual runtime values, and figure out what went wrong without the back-and-forth.
