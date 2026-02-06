@@ -6,16 +6,16 @@ import { fileURLToPath } from "node:url";
 export type StartResult = { created: false; reason: "already_active" } | { created: true; port?: number };
 
 export async function startSession(projectDir: string, options: { skipServer?: boolean } = {}): Promise<StartResult> {
-  const logDir = join(projectDir, ".trace-ai-logs");
+  const logDir = join(projectDir, ".llm-trace-logs");
   if (existsSync(logDir)) return { created: false, reason: "already_active" };
   mkdirSync(logDir, { recursive: true });
 
   const gitignorePath = join(projectDir, ".gitignore");
   if (existsSync(gitignorePath)) {
-    if (!readFileSync(gitignorePath, "utf-8").includes(".trace-ai-logs/"))
-      appendFileSync(gitignorePath, "\n.trace-ai-logs/\n");
+    if (!readFileSync(gitignorePath, "utf-8").includes(".llm-trace-logs/"))
+      appendFileSync(gitignorePath, "\n.llm-trace-logs/\n");
   } else {
-    writeFileSync(gitignorePath, ".trace-ai-logs/\n");
+    writeFileSync(gitignorePath, ".llm-trace-logs/\n");
   }
 
   if (!options.skipServer) {

@@ -7,15 +7,15 @@ import { runStop } from "./commands/stop.ts";
 import { runTail } from "./commands/tail.ts";
 import { parseCliArgs } from "./parse-args.ts";
 
-const HELP = `trace-ai — Structured execution traces for LLM debugging
+const HELP = `llm-trace — Structured execution traces for LLM debugging
 
 Usage:
-  trace-ai start              Begin debugging session
-  trace-ai stop               End session, delete traces
-  trace-ai status             Show session info
-  trace-ai list [--errors] [--name <pattern>] [--last <n>] [--human]
-  trace-ai show <id> [--human]
-  trace-ai tail [--errors] [--name <pattern>]
+  llm-trace start              Begin debugging session
+  llm-trace stop               End session, delete traces
+  llm-trace status             Show session info
+  llm-trace list [--errors] [--name <pattern>] [--last <n>] [--human]
+  llm-trace show <id> [--human]
+  llm-trace tail [--errors] [--name <pattern>]
 `;
 
 async function main() {
@@ -31,7 +31,7 @@ async function main() {
       return runList(options);
     case "show":
       if (!id) {
-        console.error("Usage: trace-ai show <id>");
+        console.error("Usage: llm-trace show <id>");
         process.exit(1);
       }
       return runShow(id, options);

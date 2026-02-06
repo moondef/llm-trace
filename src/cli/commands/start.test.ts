@@ -8,20 +8,20 @@ import { startSession } from "./start.ts";
 describe("startSession", () => {
   let testDir: string;
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), "trace-ai-start-"));
+    testDir = mkdtempSync(join(tmpdir(), "llm-trace-start-"));
   });
   afterEach(() => {
     rmSync(testDir, { recursive: true });
   });
 
-  it("creates .trace-ai-logs directory", async () => {
+  it("creates .llm-trace-logs directory", async () => {
     const r = await startSession(testDir, { skipServer: true });
     assert.equal(r.created, true);
-    assert.ok(existsSync(join(testDir, ".trace-ai-logs")));
+    assert.ok(existsSync(join(testDir, ".llm-trace-logs")));
   });
 
   it("reports already active", async () => {
-    mkdirSync(join(testDir, ".trace-ai-logs"));
+    mkdirSync(join(testDir, ".llm-trace-logs"));
     const r = await startSession(testDir, { skipServer: true });
     assert.equal(r.created, false);
     assert.equal(r.reason, "already_active");
@@ -30,13 +30,13 @@ describe("startSession", () => {
   it("adds to .gitignore", async () => {
     writeFileSync(join(testDir, ".gitignore"), "node_modules/\n");
     await startSession(testDir, { skipServer: true });
-    assert.ok(readFileSync(join(testDir, ".gitignore"), "utf-8").includes(".trace-ai-logs/"));
+    assert.ok(readFileSync(join(testDir, ".gitignore"), "utf-8").includes(".llm-trace-logs/"));
   });
 
   it("does not duplicate in .gitignore", async () => {
-    writeFileSync(join(testDir, ".gitignore"), ".trace-ai-logs/\n");
+    writeFileSync(join(testDir, ".gitignore"), ".llm-trace-logs/\n");
     await startSession(testDir, { skipServer: true });
-    const count = readFileSync(join(testDir, ".gitignore"), "utf-8").split(".trace-ai-logs/").length - 1;
+    const count = readFileSync(join(testDir, ".gitignore"), "utf-8").split(".llm-trace-logs/").length - 1;
     assert.equal(count, 1);
   });
 });

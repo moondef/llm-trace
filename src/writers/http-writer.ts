@@ -21,7 +21,7 @@ export function createHttpWriter(serverUrl: string): Writer & { flush(): Promise
       });
     } catch {
       if (!warned) {
-        console.warn("[trace-ai] Server not running, traces disabled.");
+        console.warn("[llm-trace] Server not running, traces disabled.");
         warned = true;
       }
     }

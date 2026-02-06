@@ -1,12 +1,12 @@
 # AGENTS.md
 
-## What is trace-ai
+## What is llm-trace
 
 A zero-dependency debugging tool that gives LLMs direct visibility into runtime behavior. Instead of asking users to paste errors, LLMs instrument code with traces, run it, and read structured execution data. Read `docs/spec.md` for the full product spec.
 
 ## Debugging Skill
 
-`skills/debugging-with-trace-ai/SKILL.md` — importable skill for Claude Code, Codex, and other LLM tools. Teaches LLMs the full debugging workflow: instrument, run, read traces, fix.
+`skills/debugging-with-llm-trace/SKILL.md` — importable skill for Claude Code, Codex, and other LLM tools. Teaches LLMs the full debugging workflow: instrument, run, read traces, fix.
 
 ## Design Principles
 

@@ -66,6 +66,6 @@ describe("createHttpWriter", () => {
     await writer.flush();
     console.warn = origWarn;
     assert.equal(warnings.length, 1); // warned only once
-    assert.ok(warnings[0].includes("trace-ai"));
+    assert.ok(warnings[0].includes("llm-trace"));
   });
 });

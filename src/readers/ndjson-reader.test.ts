@@ -10,8 +10,8 @@ describe("createNdjsonReader", () => {
   let logDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), "trace-ai-reader-"));
-    logDir = join(testDir, ".trace-ai-logs");
+    testDir = mkdtempSync(join(tmpdir(), "llm-trace-reader-"));
+    logDir = join(testDir, ".llm-trace-logs");
     mkdirSync(logDir);
   });
 

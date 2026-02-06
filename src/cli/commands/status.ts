@@ -6,7 +6,7 @@ export type SessionStatus =
   | { active: true; traceCount: number; errorCount: number; serverPort?: number };
 
 export function getSessionStatus(projectDir: string): SessionStatus {
-  const logDir = join(projectDir, ".trace-ai-logs");
+  const logDir = join(projectDir, ".llm-trace-logs");
   if (!existsSync(logDir)) return { active: false };
 
   const files = readdirSync(logDir).filter((f) => f.endsWith(".ndjson"));

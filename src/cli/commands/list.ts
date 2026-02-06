@@ -14,7 +14,7 @@ export async function getFormattedList(logDir: string, options: Record<string, s
 }
 
 export async function runList(options: Record<string, string | boolean>) {
-  const logDir = join(process.cwd(), ".trace-ai-logs");
+  const logDir = join(process.cwd(), ".llm-trace-logs");
   if (!existsSync(logDir)) {
     console.log("No active session.");
     return;

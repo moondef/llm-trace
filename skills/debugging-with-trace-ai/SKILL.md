@@ -1,9 +1,9 @@
 ---
-name: debugging-with-trace-ai
-description: Use when debugging runtime issues, unexpected behavior, or errors in code that has trace-ai installed — before resorting to print statements or guessing at fixes
+name: debugging-with-llm-trace
+description: Use when debugging runtime issues, unexpected behavior, or errors in code that has llm-trace installed — before resorting to print statements or guessing at fixes
 ---
 
-# Debugging with trace-ai
+# Debugging with llm-trace
 
 ## Overview
 
@@ -25,14 +25,14 @@ You can see runtime behavior directly instead of asking the user to paste errors
 
 ## Prerequisites
 
-Confirm trace-ai is installed:
+Confirm llm-trace is installed:
 
 ```bash
 # Check if installed
-npm ls trace-ai
+npm ls llm-trace
 
 # Install if needed
-npm install trace-ai
+npm install llm-trace
 ```
 
 ## The Process
@@ -40,13 +40,13 @@ npm install trace-ai
 ### 1. Start a session
 
 ```bash
-npx trace-ai start
+npx llm-trace start
 ```
 
 Check if one is already running:
 
 ```bash
-npx trace-ai status
+npx llm-trace status
 ```
 
 ### 2. Instrument the suspected code
@@ -54,7 +54,7 @@ npx trace-ai status
 Add `trace()` around the operation that fails. Add `span()` around each step. Add `checkpoint()` to capture state at key decision points.
 
 ```typescript
-import { trace } from "trace-ai";
+import { trace } from "llm-trace";
 
 // Wrap the failing operation
 const result = await trace("debug-checkout", async (handle) => {
@@ -90,7 +90,7 @@ const result = await trace("debug-checkout", async (handle) => {
 **Instrumentation rules:**
 - Checkpoint BEFORE and AFTER transforms — see what goes in and what comes out
 - Name checkpoints by what the data IS ("cart-data", "api-response"), not what you're doing ("step-1")
-- Errors are captured automatically — if a span throws, trace-ai records the error and stack trace
+- Errors are captured automatically — if a span throws, llm-trace records the error and stack trace
 
 ### 3. Run the code
 
@@ -107,13 +107,13 @@ node scripts/reproduce.js
 
 ```bash
 # List all traces
-npx trace-ai list
+npx llm-trace list
 
 # Or filter for just errors
-npx trace-ai list --errors
+npx llm-trace list --errors
 
 # Show a specific trace as a tree
-npx trace-ai show <trace-id>
+npx llm-trace show <trace-id>
 ```
 
 The JSON output gives you:
@@ -139,8 +139,8 @@ Fix the root cause. Run again. Check the new trace confirms the fix:
 npm test
 
 # Verify the trace is now clean
-npx trace-ai list --last 1
-npx trace-ai show <new-trace-id>
+npx llm-trace list --last 1
+npx llm-trace show <new-trace-id>
 ```
 
 ### 7. Clean up
@@ -148,11 +148,11 @@ npx trace-ai show <new-trace-id>
 Remove instrumentation and stop the session:
 
 1. Remove the `trace()`, `span()`, and `checkpoint()` calls you added
-2. Remove the `import { trace } from "trace-ai"` if no longer needed
+2. Remove the `import { trace } from "llm-trace"` if no longer needed
 3. Stop the session:
 
 ```bash
-npx trace-ai stop
+npx llm-trace stop
 ```
 
 ## Narrowing Down
@@ -176,11 +176,11 @@ This is binary search for bugs — each iteration halves the search space.
 
 | CLI Command | Purpose |
 |-------------|---------|
-| `trace-ai start` | Begin session |
-| `trace-ai list --errors` | Find failing traces |
-| `trace-ai show <id>` | Read full trace tree |
-| `trace-ai tail` | Watch for new traces live |
-| `trace-ai stop` | End session, delete traces |
+| `llm-trace start` | Begin session |
+| `llm-trace list --errors` | Find failing traces |
+| `llm-trace show <id>` | Read full trace tree |
+| `llm-trace tail` | Watch for new traces live |
+| `llm-trace stop` | End session, delete traces |
 
 ## Common Mistakes
 
@@ -191,7 +191,7 @@ Start with one trace around the failing operation. Add granularity only where th
 If you only checkpoint the output, you can't tell whether the input was bad or the transform was bad. Checkpoint both.
 
 **Leaving instrumentation in production code**
-Always remove trace-ai calls after debugging. They're for debugging sessions, not permanent logging.
+Always remove llm-trace calls after debugging. They're for debugging sessions, not permanent logging.
 
 **Not reading the actual trace data**
 Don't just look at the error message. Read the checkpoint values. The root cause is usually in the data, not the error string.

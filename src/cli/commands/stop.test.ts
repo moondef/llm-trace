@@ -8,17 +8,17 @@ import { stopSession } from "./stop.ts";
 describe("stopSession", () => {
   let testDir: string;
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), "trace-ai-stop-"));
+    testDir = mkdtempSync(join(tmpdir(), "llm-trace-stop-"));
   });
   afterEach(() => {
     rmSync(testDir, { recursive: true });
   });
 
-  it("deletes .trace-ai-logs", async () => {
-    mkdirSync(join(testDir, ".trace-ai-logs"));
+  it("deletes .llm-trace-logs", async () => {
+    mkdirSync(join(testDir, ".llm-trace-logs"));
     const r = await stopSession(testDir);
     assert.equal(r.stopped, true);
-    assert.equal(existsSync(join(testDir, ".trace-ai-logs")), false);
+    assert.equal(existsSync(join(testDir, ".llm-trace-logs")), false);
   });
 
   it("reports no session", async () => {

@@ -24,8 +24,8 @@ describe("createTraceServer", () => {
   let server: ReturnType<typeof createTraceServer>;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), "trace-ai-server-"));
-    logDir = join(testDir, ".trace-ai-logs");
+    testDir = mkdtempSync(join(tmpdir(), "llm-trace-server-"));
+    logDir = join(testDir, ".llm-trace-logs");
     mkdirSync(logDir);
   });
 

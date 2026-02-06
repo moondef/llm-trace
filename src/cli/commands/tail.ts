@@ -15,7 +15,7 @@ function summarizeFile(filePath: string): TraceSummary | null {
 }
 
 export async function runTail(options: Record<string, string | boolean>) {
-  const logDir = join(process.cwd(), ".trace-ai-logs");
+  const logDir = join(process.cwd(), ".llm-trace-logs");
   if (!existsSync(logDir)) {
     console.log("No active session.");
     return;

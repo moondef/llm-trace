@@ -4,7 +4,7 @@ import { join } from "node:path";
 export type StopResult = { stopped: false; reason: "no_session" } | { stopped: true };
 
 export async function stopSession(projectDir: string): Promise<StopResult> {
-  const logDir = join(projectDir, ".trace-ai-logs");
+  const logDir = join(projectDir, ".llm-trace-logs");
   if (!existsSync(logDir)) return { stopped: false, reason: "no_session" };
 
   const serverFile = join(logDir, ".server");

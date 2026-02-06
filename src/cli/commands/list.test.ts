@@ -10,8 +10,8 @@ describe("getFormattedList", () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), "trace-ai-list-"));
-    logDir = join(testDir, ".trace-ai-logs");
+    testDir = mkdtempSync(join(tmpdir(), "llm-trace-list-"));
+    logDir = join(testDir, ".llm-trace-logs");
     mkdirSync(logDir);
   });
   afterEach(() => {
