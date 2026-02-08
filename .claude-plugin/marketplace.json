@@ -1,0 +1,14 @@
+{
+  "name": "llm-trace",
+  "owner": {
+    "name": "moondef"
+  },
+  "plugins": [
+    {
+      "name": "debugging-with-llm-trace",
+      "source": ".",
+      "description": "Runtime debugging with structured traces — instrument code, read execution data, fix root cause",
+      "strict": false
+    }
+  ]
+}

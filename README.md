@@ -14,7 +14,8 @@ Install the [debugging skill](skills/debugging-with-llm-trace/SKILL.md) so your 
 
 **Claude Code:**
 ```bash
-/plugin install moondef/llm-trace
+/plugin marketplace add moondef/llm-trace
+/plugin install debugging-with-llm-trace@llm-trace
 ```
 
 **Codex:**
